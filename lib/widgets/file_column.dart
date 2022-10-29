@@ -8,7 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class FileColumn extends ConsumerStatefulWidget {
   final Color color;
-  final FileColumnSide columnSide;
+  final SidePanelFocus columnSide;
 
   const FileColumn({
     Key? key,
@@ -58,14 +58,17 @@ class _FileColumnState extends ConsumerState<FileColumn> {
   @override
   Widget build(BuildContext context) {
     final side = ref.watch(sidePanelFocusNotifierProvider);
+    final sidePanelFocusNotifier =
+        ref.watch(sidePanelFocusNotifierProvider.notifier);
 
     return Flexible(
       child: Focus(
         onKey: (focusNode, keyboard) {
           focusNode.requestFocus();
 
-          if (side == SidePanelFocus.left) {
+          if (side == widget.columnSide) {
             if (keyboard is RawKeyDownEvent) {
+              print(keyboard.data.logicalKey);
               if (keyboard.data.logicalKey == LogicalKeyboardKey.arrowDown) {
                 if (currentlySelectedItemIndex < pathItems.length - 1) {
                   setState(() {
@@ -79,6 +82,17 @@ class _FileColumnState extends ConsumerState<FileColumn> {
                     currentlySelectedItemIndex--;
                   });
                 }
+              } else if (keyboard.data.logicalKey == LogicalKeyboardKey.home) {
+                setState(() {
+                  currentlySelectedItemIndex = 0;
+                });
+              } else if (keyboard.data.logicalKey == LogicalKeyboardKey.end) {
+                setState(() {
+                  currentlySelectedItemIndex = pathItems.length - 1;
+                });
+              } else if (keyboard.data.logicalKey == LogicalKeyboardKey.space) {
+                sidePanelFocusNotifier.changeSide();
+                setState(() {});
               }
               scrollToItem(currentlySelectedItemIndex);
             }
@@ -102,7 +116,7 @@ class _FileColumnState extends ConsumerState<FileColumn> {
                         currentlySelectedItemIndex = item.key;
                         setState(() {});
                       },
-                      // onDoubleTap: () => commanderNotifier.open(currentFile),
+                      onDoubleTap: () => commanderNotifier.open(item.value),
                       child: Container(
                         height: 28,
                         color: currentlySelectedItemIndex == item.key

@@ -1,3 +1,4 @@
+import 'package:dash_manager/notifiers/side_panel_focus_notifier.dart';
 import 'package:dash_manager/widgets/file_column.dart';
 import 'package:flutter/material.dart';
 
@@ -13,11 +14,11 @@ class MiddleColumns extends StatelessWidget {
         children: const [
           FileColumn(
             color: Colors.amber,
-            columnSide: FileColumnSide.left,
+            columnSide: SidePanelFocus.left,
           ),
           FileColumn(
             color: Colors.purple,
-            columnSide: FileColumnSide.right,
+            columnSide: SidePanelFocus.right,
           ),
         ],
       ),

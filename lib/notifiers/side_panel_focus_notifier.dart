@@ -6,6 +6,14 @@ final sidePanelFocusNotifierProvider =
 
 class SidePanelFocusNotifier extends StateNotifier<SidePanelFocus> {
   SidePanelFocusNotifier() : super(SidePanelFocus.left);
+
+  void changeSide() {
+    if (state == SidePanelFocus.left) {
+      state = SidePanelFocus.right;
+    } else {
+      state = SidePanelFocus.right;
+    }
+  }
 }
 
 enum SidePanelFocus { left, right }
