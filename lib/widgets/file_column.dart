@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dash_manager/models/file_system_entity.dart';
 import 'package:dash_manager/notifiers/commander_notifier.dart';
 import 'package:dash_manager/notifiers/side_panel_focus_notifier.dart';
@@ -5,6 +7,7 @@ import 'package:dash_manager/providers/home_directory_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:open_file/open_file.dart';
 
 class FileColumn extends ConsumerStatefulWidget {
   final Color color;
@@ -23,11 +26,12 @@ class _FileColumnState extends ConsumerState<FileColumn> {
   final double itemHeight = 28;
 
   List<FileSystemItem> pathItems = [];
-  List<GlobalKey> pathItemKeys = [];
+  List<GlobalKey> pathItemsKeys = [];
 
   late CommanderController commanderNotifier;
   int currentlySelectedItemIndex = -1;
   late FocusNode keyboardListenerFocusNode;
+  String currentPath = '';
 
   @override
   void initState() {
@@ -37,18 +41,26 @@ class _FileColumnState extends ConsumerState<FileColumn> {
 
     commanderNotifier = ref.read(commanderControllerProvider);
     final homePath = ref.read(homeDirectoryProvider);
+    currentPath = homePath;
 
-    commanderNotifier.loadFiles(homePath).then((value) {
+    _loadItemsForPath(homePath);
+  }
+
+  void _loadItemsForPath(String path) {
+    commanderNotifier.loadFiles(path).then((value) {
       pathItems = value;
       for (var element in value) {
-        pathItemKeys.add(GlobalKey(debugLabel: element.name));
+        pathItemsKeys.add(GlobalKey(debugLabel: element.name));
       }
+
+      currentlySelectedItemIndex = -1;
+      currentPath = path;
       setState(() {});
     });
   }
 
   Future scrollToItem(int index) async {
-    final context = pathItemKeys[index].currentContext!;
+    final context = pathItemsKeys[index].currentContext!;
 
     await Scrollable.ensureVisible(context,
         alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
@@ -93,8 +105,28 @@ class _FileColumnState extends ConsumerState<FileColumn> {
               } else if (keyboard.data.logicalKey == LogicalKeyboardKey.space) {
                 sidePanelFocusNotifier.changeSide();
                 setState(() {});
+              } else if (keyboard.data.logicalKey == LogicalKeyboardKey.enter) {
+                // commanderNotifier.open(pathItems[currentlySelectedItemIndex]);
+                // setState(() {});
+                if (currentlySelectedItemIndex > -1) {
+                  var pathItem = pathItems[currentlySelectedItemIndex];
+                  if (pathItem.fileSystemEntity == null) {
+                    var parentOf = FileSystemEntity.parentOf(currentPath);
+                    print('parent path $parentOf');
+                    _loadItemsForPath(parentOf);
+                  } else {
+                    if (pathItem.entityType == FileSystemItemType.directory) {
+                      _loadItemsForPath(pathItem.fileSystemEntity!.path);
+                    } else {
+                      OpenFile.open(pathItem.fileSystemEntity!.path);
+                    }
+                  }
+                }
               }
-              scrollToItem(currentlySelectedItemIndex);
+
+              if (currentlySelectedItemIndex > -1) {
+                scrollToItem(currentlySelectedItemIndex);
+              }
             }
           }
 
@@ -111,10 +143,12 @@ class _FileColumnState extends ConsumerState<FileColumn> {
                   .entries
                   .map(
                     (item) => InkWell(
-                      key: pathItemKeys[item.key],
+                      key: pathItemsKeys[item.key],
                       onTap: () {
-                        currentlySelectedItemIndex = item.key;
-                        setState(() {});
+                        setState(() {
+                          currentlySelectedItemIndex = item.key;
+                        });
+                        scrollToItem(currentlySelectedItemIndex);
                       },
                       onDoubleTap: () => commanderNotifier.open(item.value),
                       child: Container(
