@@ -104,7 +104,6 @@ class _FileColumnState extends ConsumerState<FileColumn> {
                 });
               } else if (keyboard.data.logicalKey == LogicalKeyboardKey.space) {
                 sidePanelFocusNotifier.changeSide();
-                setState(() {});
               } else if (keyboard.data.logicalKey == LogicalKeyboardKey.enter) {
                 // commanderNotifier.open(pathItems[currentlySelectedItemIndex]);
                 // setState(() {});
@@ -149,6 +148,9 @@ class _FileColumnState extends ConsumerState<FileColumn> {
                           currentlySelectedItemIndex = item.key;
                         });
                         scrollToItem(currentlySelectedItemIndex);
+                        keyboardListenerFocusNode.requestFocus();
+                        sidePanelFocusNotifier.changeSide(
+                            side: widget.columnSide);
                       },
                       onDoubleTap: () => commanderNotifier.open(item.value),
                       child: Container(

@@ -7,11 +7,15 @@ final sidePanelFocusNotifierProvider =
 class SidePanelFocusNotifier extends StateNotifier<SidePanelFocus> {
   SidePanelFocusNotifier() : super(SidePanelFocus.left);
 
-  void changeSide() {
-    if (state == SidePanelFocus.left) {
-      state = SidePanelFocus.right;
+  void changeSide({SidePanelFocus? side}) {
+    if (side == null) {
+      if (state == SidePanelFocus.left) {
+        state = SidePanelFocus.right;
+      } else {
+        state = SidePanelFocus.right;
+      }
     } else {
-      state = SidePanelFocus.right;
+      state = side;
     }
   }
 }
