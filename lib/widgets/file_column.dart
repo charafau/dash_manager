@@ -105,8 +105,6 @@ class _FileColumnState extends ConsumerState<FileColumn> {
               } else if (keyboard.data.logicalKey == LogicalKeyboardKey.space) {
                 sidePanelFocusNotifier.changeSide();
               } else if (keyboard.data.logicalKey == LogicalKeyboardKey.enter) {
-                // commanderNotifier.open(pathItems[currentlySelectedItemIndex]);
-                // setState(() {});
                 if (currentlySelectedItemIndex > -1) {
                   var pathItem = pathItems[currentlySelectedItemIndex];
                   if (pathItem.fileSystemEntity == null) {
