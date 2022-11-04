@@ -12,11 +12,15 @@ import 'package:open_file/open_file.dart';
 class FileColumn extends ConsumerStatefulWidget {
   final Color color;
   final SidePanelFocus columnSide;
+  final FocusNode opposidePanelFocusNode;
+  final FocusNode panelFocusNode;
 
   const FileColumn({
     Key? key,
     required this.color,
     required this.columnSide,
+    required this.opposidePanelFocusNode,
+    required this.panelFocusNode,
   }) : super(key: key);
   @override
   ConsumerState<FileColumn> createState() => _FileColumnState();
@@ -30,14 +34,11 @@ class _FileColumnState extends ConsumerState<FileColumn> {
 
   late CommanderController commanderNotifier;
   int currentlySelectedItemIndex = -1;
-  late FocusNode keyboardListenerFocusNode;
   String currentPath = '';
 
   @override
   void initState() {
     super.initState();
-    keyboardListenerFocusNode =
-        FocusNode(debugLabel: 'file column ${widget.columnSide}');
 
     commanderNotifier = ref.read(commanderControllerProvider);
     final homePath = ref.read(homeDirectoryProvider);
@@ -76,11 +77,10 @@ class _FileColumnState extends ConsumerState<FileColumn> {
     return Flexible(
       child: Focus(
         onKey: (focusNode, keyboard) {
-          focusNode.requestFocus();
-
           if (side == widget.columnSide) {
+            // focusNode.requestFocus();
+            widget.panelFocusNode.requestFocus();
             if (keyboard is RawKeyDownEvent) {
-              print(keyboard.data.logicalKey);
               if (keyboard.data.logicalKey == LogicalKeyboardKey.arrowDown) {
                 if (currentlySelectedItemIndex < pathItems.length - 1) {
                   setState(() {
@@ -104,12 +104,12 @@ class _FileColumnState extends ConsumerState<FileColumn> {
                 });
               } else if (keyboard.data.logicalKey == LogicalKeyboardKey.space) {
                 sidePanelFocusNotifier.changeSide();
+                widget.opposidePanelFocusNode.requestFocus();
               } else if (keyboard.data.logicalKey == LogicalKeyboardKey.enter) {
                 if (currentlySelectedItemIndex > -1) {
                   var pathItem = pathItems[currentlySelectedItemIndex];
                   if (pathItem.fileSystemEntity == null) {
                     var parentOf = FileSystemEntity.parentOf(currentPath);
-                    print('parent path $parentOf');
                     _loadItemsForPath(parentOf);
                   } else {
                     if (pathItem.entityType == FileSystemItemType.directory) {
@@ -130,8 +130,9 @@ class _FileColumnState extends ConsumerState<FileColumn> {
           return KeyEventResult.handled;
         },
         descendantsAreFocusable: false,
-        focusNode: keyboardListenerFocusNode,
+        focusNode: widget.panelFocusNode,
         child: Container(
+          height: double.maxFinite,
           color: widget.color,
           child: SingleChildScrollView(
             child: Column(
@@ -146,7 +147,7 @@ class _FileColumnState extends ConsumerState<FileColumn> {
                           currentlySelectedItemIndex = item.key;
                         });
                         scrollToItem(currentlySelectedItemIndex);
-                        keyboardListenerFocusNode.requestFocus();
+                        widget.panelFocusNode.requestFocus();
                         sidePanelFocusNotifier.changeSide(
                             side: widget.columnSide);
                       },
@@ -162,7 +163,10 @@ class _FileColumnState extends ConsumerState<FileColumn> {
                                 item.value.entityType == FileSystemItemType.file
                                     ? Icons.file_copy
                                     : Icons.folder),
-                            Text(item.value.name),
+                            Flexible(
+                              child: Text(item.value.name,
+                                  overflow: TextOverflow.ellipsis),
+                            ),
                           ],
                         ),
                       ),

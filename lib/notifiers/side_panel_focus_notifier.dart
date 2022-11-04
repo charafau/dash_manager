@@ -12,7 +12,7 @@ class SidePanelFocusNotifier extends StateNotifier<SidePanelFocus> {
       if (state == SidePanelFocus.left) {
         state = SidePanelFocus.right;
       } else {
-        state = SidePanelFocus.right;
+        state = SidePanelFocus.left;
       }
     } else {
       state = side;

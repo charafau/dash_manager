@@ -28,13 +28,14 @@ dependencies:
   flutter_riverpod: ^2.0.2
 
   cupertino_icons: ^1.0.2
+  percent_indicator: ^4.0.1
+  open_file: ^3.2.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
   flutter_lints: ^2.0.0
-  open_file: ^3.2.1
 
 flutter:
 
