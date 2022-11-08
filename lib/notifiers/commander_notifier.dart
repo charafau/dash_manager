@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path/path.dart' as p;
@@ -11,26 +12,35 @@ import 'package:path/path.dart' as p;
 import 'package:dash_manager/models/file_system_entity.dart';
 import 'package:dash_manager/providers/home_directory_provider.dart';
 
-final commanderControllerProvider = Provider<CommanderController>(
-  (ref) => CommanderController(
+final leftCommanderNotifierProvider =
+    StateNotifierProvider<CommanderNotifier, CommanderNotifierState>(
+  (ref) => CommanderNotifier(
     startDir: ref.read(homeDirectoryProvider),
   ),
 );
 
-class CommanderController {
+final rightCommanderNotifierProvider =
+    StateNotifierProvider<CommanderNotifier, CommanderNotifierState>(
+  (ref) => CommanderNotifier(
+    startDir: ref.read(homeDirectoryProvider),
+  ),
+);
+
+class CommanderNotifier extends StateNotifier<CommanderNotifierState> {
   final String startDir;
 
-  CommanderController({required this.startDir}) {
+  CommanderNotifier({required this.startDir})
+      : super(CommanderNotifierState.empty()) {
     loadFiles(startDir);
   }
 
-  Future<List<FileSystemItem>> loadFiles(String path) async {
+  Future<void> loadFiles(String path, {bool filterHiddenFiles = true}) async {
     Directory dir = Directory(path);
 
     final List<FileSystemEntity> entities =
         await dir.list(recursive: false).toList();
 
-    final fsi = <FileSystemItem>[];
+    var fsi = <FileSystemItem>[];
 
     entities.sort(((a, b) => a.path.compareTo(b.path)));
 
@@ -59,59 +69,112 @@ class CommanderController {
       );
     });
 
-    return fsi;
+    // List<FileSystemItem> get nonHiddenFiles =>
+    //     pathItems.where((f) => !f.isHidden).toList();
+
+    if (filterHiddenFiles) {
+      fsi = fsi.where((f) => !f.isHidden).toList();
+    }
+
+    final globals = fsi.map((f) => GlobalKey(debugLabel: f.name)).toList();
+
+    state = CommanderNotifierState(
+      currentPath: path,
+      pathItems: fsi,
+      pathItemsKeys: globals,
+      currentlySelectedItemIndex: -1,
+    );
   }
 
-  void open(FileSystemItem item) {
-    if (item.entityType == FileSystemItemType.directory) {
-      if (item.fileSystemEntity != null) {
-        loadFiles(item.fileSystemEntity!.path);
+  void openCurrentItem() {
+    if (state.currentlySelectedItemIndex > -1) {
+      var pathItem = state.pathItems[state.currentlySelectedItemIndex];
+      if (pathItem.fileSystemEntity == null) {
+        var parentOf = FileSystemEntity.parentOf(state.currentPath);
+        loadFiles(parentOf, filterHiddenFiles: true);
       } else {
-        // go to parent
+        if (pathItem.entityType == FileSystemItemType.directory) {
+          loadFiles(pathItem.fileSystemEntity!.path, filterHiddenFiles: true);
+        } else {
+          OpenFile.open(pathItem.fileSystemEntity!.path);
+        }
       }
-    } else {
-      OpenFile.open(item.fileSystemEntity!.path);
     }
+  }
+
+  void setCurrentlySelectedIndex(int index) {
+    state = state.copyWith(currentlySelectedItemIndex: index);
+  }
+
+  void goToNextItem() {
+    if (state.currentlySelectedItemIndex < state.pathItems.length - 1) {
+      setCurrentlySelectedIndex(state.currentlySelectedItemIndex + 1);
+    }
+  }
+
+  void goToPreviousItem() {
+    if (state.currentlySelectedItemIndex > 0) {
+      // state = state.copyWith(
+      //     currentlySelectedItemIndex: state.currentlySelectedItemIndex - 1);
+
+      setCurrentlySelectedIndex(state.currentlySelectedItemIndex - 1);
+    }
+  }
+
+  void goToFirstItem() {
+    setCurrentlySelectedIndex(0);
+  }
+
+  void goToLastItem() {
+    setCurrentlySelectedIndex(state.pathItems.length - 1);
   }
 }
 
 class CommanderNotifierState {
   final String currentPath;
-  final List<FileSystemItem> files;
-  final int? currentlySelectedItemIndex;
+  final List<FileSystemItem> pathItems;
+  final List<GlobalKey> pathItemsKeys;
+  final int currentlySelectedItemIndex;
 
   CommanderNotifierState({
     required this.currentPath,
-    required this.files,
-    this.currentlySelectedItemIndex,
+    required this.pathItems,
+    required this.pathItemsKeys,
+    this.currentlySelectedItemIndex = -1,
   });
 
-  int get numberOfHiddenFiles => files.where((f) => !f.isHidden).length;
+  int get numberOfHiddenFiles => pathItems.where((f) => !f.isHidden).length;
 
   List<FileSystemItem> get nonHiddenFiles =>
-      files.where((f) => !f.isHidden).toList();
+      pathItems.where((f) => !f.isHidden).toList();
 
   factory CommanderNotifierState.empty() => CommanderNotifierState(
         currentPath: '',
-        files: [],
+        pathItems: [],
+        pathItemsKeys: [],
       );
 
   CommanderNotifierState copyWith({
     String? currentPath,
-    List<FileSystemItem>? files,
+    List<FileSystemItem>? pathItems,
+    List<GlobalKey>? pathItemsKeys,
     int? currentlySelectedItemIndex,
   }) {
     return CommanderNotifierState(
       currentPath: currentPath ?? this.currentPath,
-      files: files ?? this.files,
+      pathItems: pathItems ?? this.pathItems,
       currentlySelectedItemIndex:
           currentlySelectedItemIndex ?? this.currentlySelectedItemIndex,
+      pathItemsKeys: pathItemsKeys ?? this.pathItemsKeys,
     );
   }
 
+  BuildContext getItemContext(int index) =>
+      pathItemsKeys[index].currentContext!;
+
   @override
   String toString() =>
-      'CommanderNotifierState(currentPath: $currentPath, files: $files, currentlySelectedItemIndex: $currentlySelectedItemIndex)';
+      'CommanderNotifierState(currentPath: $currentPath, files: $pathItems, currentlySelectedItemIndex: $currentlySelectedItemIndex)';
 
   @override
   bool operator ==(Object other) {
@@ -119,13 +182,13 @@ class CommanderNotifierState {
 
     return other is CommanderNotifierState &&
         other.currentPath == currentPath &&
-        listEquals(other.files, files) &&
+        listEquals(other.pathItems, pathItems) &&
         other.currentlySelectedItemIndex == currentlySelectedItemIndex;
   }
 
   @override
   int get hashCode =>
       currentPath.hashCode ^
-      files.hashCode ^
+      pathItems.hashCode ^
       currentlySelectedItemIndex.hashCode;
 }
