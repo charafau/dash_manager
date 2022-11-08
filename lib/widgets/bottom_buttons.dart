@@ -29,12 +29,12 @@ class BottomButtons extends StatelessWidget {
               child: const Text('F5 Copy')),
           TextButton(
               onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) {
-                    return const CopyDialog();
-                  },
-                );
+                // showDialog(
+                //   context: context,
+                //   builder: (context) {
+                //     // return const CopyDialog();
+                //   },
+                // );
               },
               child: const Text('F6 Move')),
           TextButton(

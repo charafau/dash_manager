@@ -69,9 +69,6 @@ class CommanderNotifier extends StateNotifier<CommanderNotifierState> {
       );
     });
 
-    // List<FileSystemItem> get nonHiddenFiles =>
-    //     pathItems.where((f) => !f.isHidden).toList();
-
     if (filterHiddenFiles) {
       fsi = fsi.where((f) => !f.isHidden).toList();
     }
@@ -114,10 +111,9 @@ class CommanderNotifier extends StateNotifier<CommanderNotifierState> {
 
   void goToPreviousItem() {
     if (state.currentlySelectedItemIndex > 0) {
-      // state = state.copyWith(
-      //     currentlySelectedItemIndex: state.currentlySelectedItemIndex - 1);
-
       setCurrentlySelectedIndex(state.currentlySelectedItemIndex - 1);
+    } else {
+      setCurrentlySelectedIndex(0);
     }
   }
 
@@ -171,6 +167,10 @@ class CommanderNotifierState {
 
   BuildContext getItemContext(int index) =>
       pathItemsKeys[index].currentContext!;
+
+  FileSystemItem? get currentFileSystemItem => currentlySelectedItemIndex > -1
+      ? pathItems[currentlySelectedItemIndex]
+      : null;
 
   @override
   String toString() =>

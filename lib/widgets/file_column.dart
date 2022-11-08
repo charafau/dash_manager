@@ -1,6 +1,8 @@
 import 'package:dash_manager/models/file_system_entity.dart';
 import 'package:dash_manager/notifiers/commander_notifier.dart';
 import 'package:dash_manager/notifiers/side_panel_focus_notifier.dart';
+import 'package:dash_manager/widgets/copy_confirm_dialog.dart';
+import 'package:dash_manager/widgets/copy_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -58,11 +60,21 @@ class FileColumn extends ConsumerWidget {
                 commanderNotifier.goToFirstItem();
               } else if (keyboard.data.logicalKey == LogicalKeyboardKey.end) {
                 commanderNotifier.goToLastItem();
-              } else if (keyboard.data.logicalKey == LogicalKeyboardKey.space) {
+              } else if (keyboard.data.logicalKey == LogicalKeyboardKey.tab) {
                 sidePanelFocusNotifier.changeSide();
                 opposidePanelFocusNode.requestFocus();
               } else if (keyboard.data.logicalKey == LogicalKeyboardKey.enter) {
                 commanderNotifier.openCurrentItem();
+              } else if (keyboard.data.logicalKey == LogicalKeyboardKey.f5) {
+                // copy
+                final fileSystemItem = state.currentFileSystemItem;
+                if (fileSystemItem != null) {
+                  copyFile(
+                    context,
+                    fileSystemItem,
+                    ref,
+                  );
+                }
               }
 
               if (state.currentlySelectedItemIndex > -1) {
@@ -118,6 +130,37 @@ class FileColumn extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> copyFile(BuildContext context, FileSystemItem fileSystemItem,
+      WidgetRef ref) async {
+    late CommanderNotifierState opposideState;
+
+    if (columnSide == SidePanelFocus.right) {
+      opposideState = ref.watch(leftCommanderNotifierProvider);
+    } else {
+      opposideState = ref.watch(rightCommanderNotifierProvider);
+    }
+
+    final shouldCopy = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return CopyConfirmDialog(
+          copyDestination: opposideState.currentPath,
+          copyItem: fileSystemItem.fileSystemEntity!.path,
+        );
+      },
+    );
+
+    if (shouldCopy != null && shouldCopy) {
+      await showDialog(
+        context: context,
+        builder: (context) => CopyDialog(
+          copyDestination: opposideState.currentPath,
+          copyItem: fileSystemItem,
+        ),
+      );
+    }
   }
 }
 

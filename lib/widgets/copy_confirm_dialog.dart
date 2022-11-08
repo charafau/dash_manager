@@ -13,6 +13,7 @@ class CopyConfirmDialog extends StatefulWidget {
 
 class _CopyConfirmDialogState extends State<CopyConfirmDialog> {
   late TextEditingController pathTextController;
+  final Key _formKey = const ValueKey('copy-form');
 
   @override
   void initState() {
@@ -44,7 +45,14 @@ class _CopyConfirmDialogState extends State<CopyConfirmDialog> {
                 textAlign: TextAlign.left,
               ),
             ),
-            TextField(controller: pathTextController),
+            Form(
+              key: _formKey,
+              child: TextField(
+                autofocus: true,
+                controller: pathTextController,
+                onSubmitted: (value) => Navigator.pop(context, true),
+              ),
+            ),
           ],
         ),
       ),
@@ -56,7 +64,6 @@ class _CopyConfirmDialogState extends State<CopyConfirmDialog> {
         TextButton(
           onPressed: () => Navigator.pop(context, true),
           child: const Text("Copy"),
-          // onPressed: () => Navigator.pop(context),
         ),
       ],
     );
