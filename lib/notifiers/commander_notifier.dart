@@ -99,6 +99,10 @@ class CommanderNotifier extends StateNotifier<CommanderNotifierState> {
     }
   }
 
+  void reloadCurrentFolder() {
+    loadFiles(state.currentPath);
+  }
+
   void setCurrentlySelectedIndex(int index) {
     state = state.copyWith(currentlySelectedItemIndex: index);
   }

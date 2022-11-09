@@ -3,6 +3,7 @@ import 'package:dash_manager/notifiers/commander_notifier.dart';
 import 'package:dash_manager/notifiers/side_panel_focus_notifier.dart';
 import 'package:dash_manager/widgets/copy_confirm_dialog.dart';
 import 'package:dash_manager/widgets/copy_dialog.dart';
+import 'package:dash_manager/widgets/create_folder_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -75,6 +76,13 @@ class FileColumn extends ConsumerWidget {
                     ref,
                   );
                 }
+              } else if (keyboard.data.logicalKey == LogicalKeyboardKey.f7) {
+                showCreateFolderDialog(context, state.currentPath)
+                    .then((value) {
+                  if (value) {
+                    commanderNotifier.reloadCurrentFolder();
+                  }
+                });
               }
 
               if (state.currentlySelectedItemIndex > -1) {
@@ -161,6 +169,16 @@ class FileColumn extends ConsumerWidget {
         ),
       );
     }
+  }
+
+  Future<bool> showCreateFolderDialog(
+      BuildContext context, String currentPath) async {
+    return await showDialog(
+      context: context,
+      builder: (context) => CreateFolderDialog(
+        currentPath: currentPath,
+      ),
+    );
   }
 }
 

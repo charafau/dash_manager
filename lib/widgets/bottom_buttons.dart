@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:dash_manager/widgets/copy_confirm_dialog.dart';
-import 'package:dash_manager/widgets/copy_dialog.dart';
 import 'package:flutter/material.dart';
 
 const maxChunkSize = 1024;
