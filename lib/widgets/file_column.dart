@@ -1,128 +1,96 @@
-import 'dart:io';
-
 import 'package:dash_manager/models/file_system_entity.dart';
 import 'package:dash_manager/notifiers/commander_notifier.dart';
 import 'package:dash_manager/notifiers/side_panel_focus_notifier.dart';
-import 'package:dash_manager/providers/home_directory_provider.dart';
+import 'package:dash_manager/widgets/copy_confirm_dialog.dart';
+import 'package:dash_manager/widgets/copy_dialog.dart';
+import 'package:dash_manager/widgets/create_folder_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:open_file/open_file.dart';
 
-class FileColumn extends ConsumerStatefulWidget {
+class FileColumn extends ConsumerWidget {
   final Color color;
   final SidePanelFocus columnSide;
+  final FocusNode opposidePanelFocusNode;
+  final FocusNode panelFocusNode;
 
   const FileColumn({
     Key? key,
     required this.color,
     required this.columnSide,
+    required this.opposidePanelFocusNode,
+    required this.panelFocusNode,
   }) : super(key: key);
-  @override
-  ConsumerState<FileColumn> createState() => _FileColumnState();
-}
-
-class _FileColumnState extends ConsumerState<FileColumn> {
   final double itemHeight = 28;
 
-  List<FileSystemItem> pathItems = [];
-  List<GlobalKey> pathItemsKeys = [];
-
-  late CommanderController commanderNotifier;
-  int currentlySelectedItemIndex = -1;
-  late FocusNode keyboardListenerFocusNode;
-  String currentPath = '';
-
-  @override
-  void initState() {
-    super.initState();
-    keyboardListenerFocusNode =
-        FocusNode(debugLabel: 'file column ${widget.columnSide}');
-
-    commanderNotifier = ref.read(commanderControllerProvider);
-    final homePath = ref.read(homeDirectoryProvider);
-    currentPath = homePath;
-
-    _loadItemsForPath(homePath);
-  }
-
-  void _loadItemsForPath(String path) {
-    commanderNotifier.loadFiles(path).then((value) {
-      pathItems = value;
-      for (var element in value) {
-        pathItemsKeys.add(GlobalKey(debugLabel: element.name));
-      }
-
-      currentlySelectedItemIndex = -1;
-      currentPath = path;
-      setState(() {});
-    });
-  }
-
-  Future scrollToItem(int index) async {
-    final context = pathItemsKeys[index].currentContext!;
-
-    await Scrollable.ensureVisible(context,
+  Future scrollToCurrentItem(CommanderNotifierState state, int index) async {
+    await Scrollable.ensureVisible(state.getItemContext(index),
         alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
         alignment: 0.5);
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final side = ref.watch(sidePanelFocusNotifierProvider);
+
+    late CommanderNotifier commanderNotifier;
+    late CommanderNotifierState state;
+    if (columnSide == SidePanelFocus.left) {
+      commanderNotifier = ref.watch(leftCommanderNotifierProvider.notifier);
+      state = ref.watch(leftCommanderNotifierProvider);
+    } else {
+      commanderNotifier = ref.watch(rightCommanderNotifierProvider.notifier);
+      state = ref.watch(rightCommanderNotifierProvider);
+    }
     final sidePanelFocusNotifier =
         ref.watch(sidePanelFocusNotifierProvider.notifier);
 
     return Flexible(
       child: Focus(
         onKey: (focusNode, keyboard) {
-          focusNode.requestFocus();
-
-          if (side == widget.columnSide) {
+          if (side == columnSide) {
+            // focusNode.requestFocus();
+            panelFocusNode.requestFocus();
             if (keyboard is RawKeyDownEvent) {
-              print(keyboard.data.logicalKey);
               if (keyboard.data.logicalKey == LogicalKeyboardKey.arrowDown) {
-                if (currentlySelectedItemIndex < pathItems.length - 1) {
-                  setState(() {
-                    currentlySelectedItemIndex++;
-                  });
-                }
+                commanderNotifier.goToNextItem();
               } else if (keyboard.data.logicalKey ==
                   LogicalKeyboardKey.arrowUp) {
-                if (currentlySelectedItemIndex > 0) {
-                  setState(() {
-                    currentlySelectedItemIndex--;
+                commanderNotifier.goToPreviousItem();
+              } else if (keyboard.data.logicalKey == LogicalKeyboardKey.home) {
+                commanderNotifier.goToFirstItem();
+              } else if (keyboard.data.logicalKey == LogicalKeyboardKey.end) {
+                commanderNotifier.goToLastItem();
+              } else if (keyboard.data.logicalKey == LogicalKeyboardKey.tab) {
+                sidePanelFocusNotifier.changeSide();
+                opposidePanelFocusNode.requestFocus();
+              } else if (keyboard.data.logicalKey == LogicalKeyboardKey.enter) {
+                commanderNotifier.openCurrentItem();
+              } else if (keyboard.data.logicalKey == LogicalKeyboardKey.f5) {
+                // copy
+                final fileSystemItem = state.currentFileSystemItem;
+                if (fileSystemItem != null) {
+                  copyFile(
+                    context,
+                    fileSystemItem,
+                    ref,
+                  ).then((value) {
+                    if (value) {
+                      _reloadOpposidePanel(ref, side);
+                    }
                   });
                 }
-              } else if (keyboard.data.logicalKey == LogicalKeyboardKey.home) {
-                setState(() {
-                  currentlySelectedItemIndex = 0;
-                });
-              } else if (keyboard.data.logicalKey == LogicalKeyboardKey.end) {
-                setState(() {
-                  currentlySelectedItemIndex = pathItems.length - 1;
-                });
-              } else if (keyboard.data.logicalKey == LogicalKeyboardKey.space) {
-                sidePanelFocusNotifier.changeSide();
-              } else if (keyboard.data.logicalKey == LogicalKeyboardKey.enter) {
-                if (currentlySelectedItemIndex > -1) {
-                  var pathItem = pathItems[currentlySelectedItemIndex];
-                  if (pathItem.fileSystemEntity == null) {
-                    var parentOf = FileSystemEntity.parentOf(currentPath);
-                    print('parent path $parentOf');
-                    _loadItemsForPath(parentOf);
-                  } else {
-                    if (pathItem.entityType == FileSystemItemType.directory) {
-                      _loadItemsForPath(pathItem.fileSystemEntity!.path);
-                    } else {
-                      OpenFile.open(pathItem.fileSystemEntity!.path);
-                    }
+              } else if (keyboard.data.logicalKey == LogicalKeyboardKey.f7) {
+                showCreateFolderDialog(context, state.currentPath)
+                    .then((value) {
+                  if (value) {
+                    commanderNotifier.reloadCurrentFolder();
                   }
-                }
+                });
               }
 
-              if (currentlySelectedItemIndex > -1) {
-                scrollToItem(currentlySelectedItemIndex);
+              if (state.currentlySelectedItemIndex > -1) {
+                scrollToCurrentItem(state, state.currentlySelectedItemIndex);
               }
             }
           }
@@ -130,30 +98,27 @@ class _FileColumnState extends ConsumerState<FileColumn> {
           return KeyEventResult.handled;
         },
         descendantsAreFocusable: false,
-        focusNode: keyboardListenerFocusNode,
+        focusNode: panelFocusNode,
         child: Container(
-          color: widget.color,
+          height: double.maxFinite,
+          color: color,
           child: SingleChildScrollView(
             child: Column(
-              children: pathItems
+              children: state.pathItems
                   .asMap()
                   .entries
                   .map(
                     (item) => InkWell(
-                      key: pathItemsKeys[item.key],
+                      key: state.pathItemsKeys[item.key],
                       onTap: () {
-                        setState(() {
-                          currentlySelectedItemIndex = item.key;
-                        });
-                        scrollToItem(currentlySelectedItemIndex);
-                        keyboardListenerFocusNode.requestFocus();
-                        sidePanelFocusNotifier.changeSide(
-                            side: widget.columnSide);
+                        commanderNotifier.setCurrentlySelectedIndex(item.key);
+                        panelFocusNode.requestFocus();
+                        sidePanelFocusNotifier.changeSide(side: columnSide);
                       },
-                      onDoubleTap: () => commanderNotifier.open(item.value),
+                      onDoubleTap: () => commanderNotifier.openCurrentItem(),
                       child: Container(
                         height: 28,
-                        color: currentlySelectedItemIndex == item.key
+                        color: state.currentlySelectedItemIndex == item.key
                             ? Colors.pink
                             : null,
                         child: Row(
@@ -162,7 +127,10 @@ class _FileColumnState extends ConsumerState<FileColumn> {
                                 item.value.entityType == FileSystemItemType.file
                                     ? Icons.file_copy
                                     : Icons.folder),
-                            Text(item.value.name),
+                            Flexible(
+                              child: Text(item.value.name,
+                                  overflow: TextOverflow.ellipsis),
+                            ),
                           ],
                         ),
                       ),
@@ -174,6 +142,71 @@ class _FileColumnState extends ConsumerState<FileColumn> {
         ),
       ),
     );
+  }
+
+  void _reloadOpposidePanel(WidgetRef ref, SidePanelFocus side) {
+    _getNotifier(
+            ref,
+            side == SidePanelFocus.left
+                ? SidePanelFocus.right
+                : SidePanelFocus.left)
+        .reloadCurrentFolder();
+  }
+
+  Future<bool> copyFile(BuildContext context, FileSystemItem fileSystemItem,
+      WidgetRef ref) async {
+    late CommanderNotifierState opposideState;
+
+    if (columnSide == SidePanelFocus.right) {
+      opposideState = ref.watch(leftCommanderNotifierProvider);
+    } else {
+      opposideState = ref.watch(rightCommanderNotifierProvider);
+    }
+
+    final shouldCopy = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return CopyConfirmDialog(
+          copyDestination: opposideState.currentPath,
+          copyItem: fileSystemItem.fileSystemEntity!.path,
+        );
+      },
+    );
+
+    if (shouldCopy != null && shouldCopy) {
+      await showDialog(
+        context: context,
+        builder: (context) => CopyDialog(
+          copyDestination: opposideState.currentPath,
+          copyItem: fileSystemItem,
+        ),
+      );
+
+      return true;
+    }
+
+    return false;
+  }
+
+  Future<bool> showCreateFolderDialog(
+      BuildContext context, String currentPath) async {
+    return await showDialog(
+      context: context,
+      builder: (context) => CreateFolderDialog(
+        currentPath: currentPath,
+      ),
+    );
+  }
+
+  CommanderNotifier _getNotifier(WidgetRef ref, SidePanelFocus side) {
+    late CommanderNotifier notifier;
+
+    if (columnSide == SidePanelFocus.right) {
+      notifier = ref.watch(leftCommanderNotifierProvider.notifier);
+    } else {
+      notifier = ref.watch(rightCommanderNotifierProvider.notifier);
+    }
+    return notifier;
   }
 }
 
