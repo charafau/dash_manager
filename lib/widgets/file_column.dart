@@ -74,7 +74,11 @@ class FileColumn extends ConsumerWidget {
                     context,
                     fileSystemItem,
                     ref,
-                  );
+                  ).then((value) {
+                    if (value) {
+                      _reloadOpposidePanel(ref, side);
+                    }
+                  });
                 }
               } else if (keyboard.data.logicalKey == LogicalKeyboardKey.f7) {
                 showCreateFolderDialog(context, state.currentPath)
@@ -140,7 +144,16 @@ class FileColumn extends ConsumerWidget {
     );
   }
 
-  Future<void> copyFile(BuildContext context, FileSystemItem fileSystemItem,
+  void _reloadOpposidePanel(WidgetRef ref, SidePanelFocus side) {
+    _getNotifier(
+            ref,
+            side == SidePanelFocus.left
+                ? SidePanelFocus.right
+                : SidePanelFocus.left)
+        .reloadCurrentFolder();
+  }
+
+  Future<bool> copyFile(BuildContext context, FileSystemItem fileSystemItem,
       WidgetRef ref) async {
     late CommanderNotifierState opposideState;
 
@@ -168,7 +181,11 @@ class FileColumn extends ConsumerWidget {
           copyItem: fileSystemItem,
         ),
       );
+
+      return true;
     }
+
+    return false;
   }
 
   Future<bool> showCreateFolderDialog(
@@ -179,6 +196,17 @@ class FileColumn extends ConsumerWidget {
         currentPath: currentPath,
       ),
     );
+  }
+
+  CommanderNotifier _getNotifier(WidgetRef ref, SidePanelFocus side) {
+    late CommanderNotifier notifier;
+
+    if (columnSide == SidePanelFocus.right) {
+      notifier = ref.watch(leftCommanderNotifierProvider.notifier);
+    } else {
+      notifier = ref.watch(rightCommanderNotifierProvider.notifier);
+    }
+    return notifier;
   }
 }
 
