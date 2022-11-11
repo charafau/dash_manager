@@ -103,6 +103,14 @@ class CommanderNotifier extends StateNotifier<CommanderNotifierState> {
     loadFiles(state.currentPath);
   }
 
+  Future<void> deleteItems(List<FileSystemItem> items) async {
+    for (var item in items) {
+      await item.fileSystemEntity?.delete();
+    }
+
+    reloadCurrentFolder();
+  }
+
   void setCurrentlySelectedIndex(int index) {
     state = state.copyWith(currentlySelectedItemIndex: index);
   }
