@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dash_manager/widgets/copy_confirm_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:macos_ui/macos_ui.dart';
 
 const maxChunkSize = 1024;
 
@@ -13,49 +14,88 @@ class BottomButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.black,
+      color: MacosColors.controlBackgroundColor.darkColor,
       width: double.infinity,
       height: 40,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          TextButton(onPressed: () {}, child: const Text('F3 View')),
-          TextButton(onPressed: () {}, child: const Text('F4 Edit')),
           TextButton(
-              onPressed: () {
-                _getChunkStream();
-              },
-              child: const Text('F5 Copy')),
+            onPressed: () {},
+            style: TextButton.styleFrom(
+              foregroundColor: MacosColors.secondaryLabelColor.darkColor,
+            ),
+            child: const Text('F3 View'),
+            // style: (color: MacosColors.labelColor),
+          ),
           TextButton(
-              onPressed: () {
-                // showDialog(
-                //   context: context,
-                //   builder: (context) {
-                //     // return const CopyDialog();
-                //   },
-                // );
-              },
-              child: const Text('F6 Move')),
+            onPressed: () {},
+            style: TextButton.styleFrom(
+              foregroundColor: MacosColors.secondaryLabelColor.darkColor,
+            ),
+            child: const Text('F4 Edit'),
+          ),
           TextButton(
-              onPressed: () async {
-                final shouldCopy = await showDialog<bool>(
-                  context: context,
-                  builder: (context) {
-                    return const CopyConfirmDialog(
-                      copyDestination: '',
-                      copyItem: 'bigfile.img',
-                    );
-                  },
-                );
+            onPressed: () {
+              _getChunkStream();
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: MacosColors.secondaryLabelColor.darkColor,
+            ),
+            child: const Text(
+              'F5 Copy',
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              // showDialog(
+              //   context: context,
+              //   builder: (context) {
+              //     // return const CopyDialog();
+              //   },
+              // );
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: MacosColors.secondaryLabelColor.darkColor,
+            ),
+            child: const Text('F6 Move'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final shouldCopy = await showDialog<bool>(
+                context: context,
+                builder: (context) {
+                  return const CopyConfirmDialog(
+                    copyDestination: '',
+                    copyItem: 'bigfile.img',
+                  );
+                },
+              );
 
-                print('should copy ? $shouldCopy');
+              print('should copy ? $shouldCopy');
 
-                // get which is selected column
-                // start copying and show copy dialog
-              },
-              child: const Text('F7 New Folder')),
-          TextButton(onPressed: () {}, child: const Text('F8 Delete')),
-          TextButton(onPressed: () {}, child: const Text('ALT+F4 Exit')),
+              // get which is selected column
+              // start copying and show copy dialog
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: MacosColors.secondaryLabelColor.darkColor,
+            ),
+            child: const Text('F7 New Folder'),
+          ),
+          TextButton(
+            onPressed: () {},
+            style: TextButton.styleFrom(
+              foregroundColor: MacosColors.secondaryLabelColor.darkColor,
+            ),
+            child: const Text('F8 Delete'),
+          ),
+          TextButton(
+            onPressed: () {},
+            style: TextButton.styleFrom(
+              foregroundColor: MacosColors.secondaryLabelColor.darkColor,
+            ),
+            child: const Text('ALT+F4 Exit'),
+          ),
         ],
       ),
     );

@@ -9,16 +9,17 @@ import 'package:dash_manager/widgets/delete_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:macos_ui/macos_ui.dart';
 
 class FileColumn extends ConsumerWidget {
-  final Color color;
+  // final Color color;
   final SidePanelFocus columnSide;
   final FocusNode opposidePanelFocusNode;
   final FocusNode panelFocusNode;
 
   const FileColumn({
     Key? key,
-    required this.color,
+    // required this.color,
     required this.columnSide,
     required this.opposidePanelFocusNode,
     required this.panelFocusNode,
@@ -117,9 +118,8 @@ class FileColumn extends ConsumerWidget {
         },
         descendantsAreFocusable: false,
         focusNode: panelFocusNode,
-        child: Container(
+        child: SizedBox(
           height: double.maxFinite,
-          color: color,
           child: SingleChildScrollView(
             child: Column(
               children: state.pathItems
@@ -137,7 +137,7 @@ class FileColumn extends ConsumerWidget {
                       child: Container(
                         height: 28,
                         color: state.currentlySelectedItemIndex == item.key
-                            ? Colors.pink
+                            ? MacosColors.controlAccentColor
                             : null,
                         child: Row(
                           children: [
@@ -146,8 +146,16 @@ class FileColumn extends ConsumerWidget {
                                     ? Icons.file_copy
                                     : Icons.folder),
                             Flexible(
-                              child: Text(item.value.name,
-                                  overflow: TextOverflow.ellipsis),
+                              child: Text(
+                                item.value.name,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: state.currentlySelectedItemIndex ==
+                                          item.key
+                                      ? Colors.white
+                                      : Colors.black,
+                                ),
+                              ),
                             ),
                           ],
                         ),

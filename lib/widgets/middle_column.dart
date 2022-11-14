@@ -29,13 +29,13 @@ class _MiddleColumnsState extends State<MiddleColumns> {
       child: Row(
         children: [
           FileColumn(
-            color: Colors.amber,
+            // color: Colors.amber,
             columnSide: SidePanelFocus.left,
             panelFocusNode: leftPanelKeyboardFocusNode,
             opposidePanelFocusNode: rightPanelKeyboardFocusNode,
           ),
           FileColumn(
-            color: Colors.purple,
+            // color: Colors.purple,
             columnSide: SidePanelFocus.right,
             panelFocusNode: rightPanelKeyboardFocusNode,
             opposidePanelFocusNode: leftPanelKeyboardFocusNode,

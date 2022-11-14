@@ -88,6 +88,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.1"
+  macos_ui:
+    dependency: "direct main"
+    description:
+      name: macos_ui
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.7.5"
   matcher:
     dependency: transitive
     description:
@@ -130,6 +137,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "4.2.2"
+  platform:
+    dependency: transitive
+    description:
+      name: platform
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "3.1.0"
   riverpod:
     dependency: transitive
     description:
@@ -198,6 +212,27 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.1.2"
+  yaru:
+    dependency: "direct main"
+    description:
+      name: yaru
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.4.3"
+  yaru_color_generator:
+    dependency: transitive
+    description:
+      name: yaru_color_generator
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.1.0"
+  yaru_colors:
+    dependency: transitive
+    description:
+      name: yaru_colors
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.1.1"
 sdks:
   dart: ">=2.18.2 <3.0.0"
-  flutter: ">=3.0.0"
+  flutter: ">=3.3.0"
