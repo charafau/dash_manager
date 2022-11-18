@@ -1,6 +1,11 @@
 # dash_manager
 
-A new Flutter project.
+double pane file manager - very WIP
+
+current status:
+
+<img width="821" alt="image" src="https://user-images.githubusercontent.com/1143994/202752681-a406cb1d-01e4-4f8a-9362-f49ff0e5c728.png">
+
 
 ## Getting Started
 
