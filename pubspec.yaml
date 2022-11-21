@@ -32,6 +32,8 @@ dependencies:
   open_file: ^3.2.1
   yaru: ^0.4.3
   macos_ui: ^1.7.5
+  multi_split_view: ^2.1.0
+  data_table_2: ^2.3.8
 
 
 

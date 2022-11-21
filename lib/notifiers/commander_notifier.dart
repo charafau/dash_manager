@@ -73,7 +73,7 @@ class CommanderNotifier extends StateNotifier<CommanderNotifierState> {
       fsi = fsi.where((f) => !f.isHidden).toList();
     }
 
-    final globals = fsi.map((f) => GlobalKey(debugLabel: f.name)).toList();
+    final globals = fsi.map((f) => ValueKey(f.name)).toList();
 
     state = CommanderNotifierState(
       currentPath: path,
@@ -141,7 +141,7 @@ class CommanderNotifier extends StateNotifier<CommanderNotifierState> {
 class CommanderNotifierState {
   final String currentPath;
   final List<FileSystemItem> pathItems;
-  final List<GlobalKey> pathItemsKeys;
+  final List<LocalKey> pathItemsKeys;
   final int currentlySelectedItemIndex;
 
   CommanderNotifierState({
@@ -165,7 +165,7 @@ class CommanderNotifierState {
   CommanderNotifierState copyWith({
     String? currentPath,
     List<FileSystemItem>? pathItems,
-    List<GlobalKey>? pathItemsKeys,
+    List<LocalKey>? pathItemsKeys,
     int? currentlySelectedItemIndex,
   }) {
     return CommanderNotifierState(
@@ -177,8 +177,8 @@ class CommanderNotifierState {
     );
   }
 
-  BuildContext getItemContext(int index) =>
-      pathItemsKeys[index].currentContext!;
+  // BuildContext getItemContext(int index) =>
+  //     pathItemsKeys[index].!;
 
   FileSystemItem? get currentFileSystemItem => currentlySelectedItemIndex > -1
       ? pathItems[currentlySelectedItemIndex]

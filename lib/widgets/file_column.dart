@@ -10,14 +10,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:macos_ui/macos_ui.dart';
+import 'package:data_table_2/data_table_2.dart';
 
 class FileColumn extends ConsumerWidget {
   // final Color color;
   final SidePanelFocus columnSide;
   final FocusNode opposidePanelFocusNode;
   final FocusNode panelFocusNode;
+  ScrollController scrollController = ScrollController();
 
-  const FileColumn({
+  FileColumn({
     Key? key,
     // required this.color,
     required this.columnSide,
@@ -27,9 +29,10 @@ class FileColumn extends ConsumerWidget {
   final double itemHeight = 28;
 
   Future scrollToCurrentItem(CommanderNotifierState state, int index) async {
-    await Scrollable.ensureVisible(state.getItemContext(index),
-        alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
-        alignment: 0.5);
+    // await Scrollable.ensureVisible(state.getItemContext(index),
+    //     alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
+    //     alignment: 0.5);
+    scrollController.jumpTo(index.toDouble());
   }
 
   @override
@@ -55,6 +58,7 @@ class FileColumn extends ConsumerWidget {
             // focusNode.requestFocus();
             panelFocusNode.requestFocus();
             if (keyboard is RawKeyDownEvent) {
+              print('key ${keyboard.data.logicalKey}');
               if (keyboard.data.logicalKey == LogicalKeyboardKey.arrowDown) {
                 commanderNotifier.goToNextItem();
               } else if (keyboard.data.logicalKey ==
@@ -120,51 +124,44 @@ class FileColumn extends ConsumerWidget {
         focusNode: panelFocusNode,
         child: SizedBox(
           height: double.maxFinite,
-          child: SingleChildScrollView(
-            child: Column(
-              children: state.pathItems
+          child: DataTable2(
+              scrollController: scrollController,
+              columns: const [
+                DataColumn2(label: Text('#'), fixedWidth: 14),
+                DataColumn2(label: Text('Name')),
+                DataColumn2(label: Text('Ext'), fixedWidth: 170),
+                DataColumn2(label: Text('Size'), fixedWidth: 170),
+                DataColumn2(label: Text('Date'), fixedWidth: 170),
+              ],
+              rows: state.pathItems
                   .asMap()
                   .entries
                   .map(
-                    (item) => InkWell(
+                    (item) => DataRow2(
                       key: state.pathItemsKeys[item.key],
-                      onTap: () {
-                        commanderNotifier.setCurrentlySelectedIndex(item.key);
-                        panelFocusNode.requestFocus();
-                        sidePanelFocusNotifier.changeSide(side: columnSide);
-                      },
-                      onDoubleTap: () => commanderNotifier.openCurrentItem(),
-                      child: Container(
-                        height: 28,
-                        color: state.currentlySelectedItemIndex == item.key
-                            ? MacosColors.controlAccentColor
-                            : null,
-                        child: Row(
-                          children: [
-                            Icon(
-                                item.value.entityType == FileSystemItemType.file
-                                    ? Icons.file_copy
-                                    : Icons.folder),
-                            Flexible(
-                              child: Text(
-                                item.value.name,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: state.currentlySelectedItemIndex ==
-                                          item.key
-                                      ? Colors.white
-                                      : Colors.black,
-                                ),
-                              ),
-                            ),
-                          ],
+                      color: MaterialStateProperty.resolveWith((states) {
+                        if (state.currentlySelectedItemIndex == item.key) {
+                          return MacosColors.controlAccentColor;
+                        }
+
+                        return item.key % 2 == 0
+                            ? MacosColors.controlBackgroundColor
+                            : Colors.grey.shade200;
+                      }),
+                      cells: [
+                        DataCell(
+                          Icon(item.value.entityType == FileSystemItemType.file
+                              ? Icons.file_copy
+                              : Icons.folder),
                         ),
-                      ),
+                        DataCell(Text(item.value.name)),
+                        DataCell(Text(item.value.entityType.name)),
+                        DataCell(Text('123')),
+                        DataCell(Text(DateTime.now().toString())),
+                      ],
                     ),
                   )
-                  .toList(),
-            ),
-          ),
+                  .toList()),
         ),
       ),
     );
