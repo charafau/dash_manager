@@ -51,8 +51,7 @@ class FileColumn extends ConsumerWidget {
     final sidePanelFocusNotifier =
         ref.watch(sidePanelFocusNotifierProvider.notifier);
 
-    return Flexible(
-      child: Focus(
+    return Focus(
         onKey: (focusNode, keyboard) {
           if (side == columnSide) {
             // focusNode.requestFocus();
@@ -122,49 +121,34 @@ class FileColumn extends ConsumerWidget {
         },
         descendantsAreFocusable: false,
         focusNode: panelFocusNode,
-        child: SizedBox(
-          height: double.maxFinite,
-          child: DataTable2(
-              scrollController: scrollController,
-              columns: const [
-                DataColumn2(label: Text('#'), fixedWidth: 14),
-                DataColumn2(label: Text('Name')),
-                DataColumn2(label: Text('Ext'), fixedWidth: 170),
-                DataColumn2(label: Text('Size'), fixedWidth: 170),
-                DataColumn2(label: Text('Date'), fixedWidth: 170),
-              ],
-              rows: state.pathItems
-                  .asMap()
-                  .entries
-                  .map(
-                    (item) => DataRow2(
-                      key: state.pathItemsKeys[item.key],
-                      color: MaterialStateProperty.resolveWith((states) {
-                        if (state.currentlySelectedItemIndex == item.key) {
-                          return MacosColors.controlAccentColor;
-                        }
-
-                        return item.key % 2 == 0
-                            ? MacosColors.controlBackgroundColor
-                            : Colors.grey.shade200;
-                      }),
-                      cells: [
-                        DataCell(
-                          Icon(item.value.entityType == FileSystemItemType.file
-                              ? Icons.file_copy
-                              : Icons.folder),
-                        ),
-                        DataCell(Text(item.value.name)),
-                        DataCell(Text(item.value.entityType.name)),
-                        DataCell(Text('123')),
-                        DataCell(Text(DateTime.now().toString())),
-                      ],
-                    ),
-                  )
-                  .toList()),
-        ),
-      ),
-    );
+        child: CustomScrollView(
+          slivers: [
+            // child: ,
+            SliverAppBar(
+              toolbarHeight: 20,
+              titleSpacing: 0,
+              elevation: 0,
+              pinned: true,
+              title: SingleRowItem(
+                  name: 'Name', ext: 'Ext', size: 'Size', date: 'Date'),
+            ),
+            SliverFixedExtentList(
+              itemExtent: 20,
+              delegate: SliverChildBuilderDelegate(
+                childCount: state.pathItems.length,
+                (context, index) {
+                  final item = state.pathItems[index];
+                  return SingleRowItem(
+                      key: state.pathItemsKeys[index],
+                      name: item.name,
+                      ext: 'ext',
+                      size: '123kb',
+                      date: '2022-02-10 12:12:12');
+                },
+              ),
+            )
+          ],
+        ));
   }
 
   void _reloadOpposidePanel(WidgetRef ref, SidePanelFocus side) {
@@ -243,6 +227,61 @@ class FileColumn extends ConsumerWidget {
   }
 }
 
+class SingleRowItem extends StatelessWidget {
+  final String name;
+  final String ext;
+  final String size;
+  final String date;
+
+  const SingleRowItem({
+    Key? key,
+    required this.name,
+    required this.ext,
+    required this.size,
+    required this.date,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+            flex: 5,
+            child: Container(
+                color: Colors.red,
+                child: Text(
+                  name,
+                  style: TextStyle(fontSize: 12),
+                ))),
+        Expanded(
+            flex: 1,
+            child: Container(
+                color: Colors.green,
+                child: Text(
+                  ext,
+                  style: TextStyle(fontSize: 12),
+                ))),
+        Expanded(
+            flex: 1,
+            child: Container(
+                color: Colors.blue,
+                child: Text(
+                  size,
+                  style: TextStyle(fontSize: 12),
+                ))),
+        Expanded(
+            flex: 1,
+            child: Container(
+                color: Colors.yellow,
+                child: Text(
+                  date,
+                  style: TextStyle(fontSize: 12),
+                ))),
+      ],
+    );
+  }
+}
+
 enum FileColumnSide { left, right }
 
 class MyBehavior extends ScrollBehavior {
@@ -252,3 +291,42 @@ class MyBehavior extends ScrollBehavior {
     return child;
   }
 }
+
+// child: DataTable2(
+//     scrollController: scrollController,
+//     columns: const [
+//       DataColumn2(label: Text('#'), fixedWidth: 14),
+//       DataColumn2(label: Text('Name')),
+//       DataColumn2(label: Text('Ext'), fixedWidth: 170),
+//       DataColumn2(label: Text('Size'), fixedWidth: 170),
+//       DataColumn2(label: Text('Date'), fixedWidth: 170),
+//     ],
+//     rows: state.pathItems
+//         .asMap()
+//         .entries
+//         .map(
+//           (item) => DataRow2(
+//             key: state.pathItemsKeys[item.key],
+//             color: MaterialStateProperty.resolveWith((states) {
+//               if (state.currentlySelectedItemIndex == item.key) {
+//                 return MacosColors.controlAccentColor;
+//               }
+
+//               return item.key % 2 == 0
+//                   ? MacosColors.controlBackgroundColor
+//                   : Colors.grey.shade200;
+//             }),
+//             cells: [
+//               DataCell(
+//                 Icon(item.value.entityType == FileSystemItemType.file
+//                     ? Icons.file_copy
+//                     : Icons.folder),
+//               ),
+//               DataCell(Text(item.value.name)),
+//               DataCell(Text(item.value.entityType.name)),
+//               DataCell(Text('123')),
+//               DataCell(Text(DateTime.now().toString())),
+//             ],
+//           ),
+//         )
+//         .toList()),
