@@ -5,10 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class CreateFolderDialog extends ConsumerWidget {
   final String currentPath;
 
-  const CreateFolderDialog({
-    super.key,
-    required this.currentPath,
-  });
+  const CreateFolderDialog({super.key, required this.currentPath});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -24,10 +21,7 @@ class CreateFolderDialog extends ConsumerWidget {
           children: [
             const Align(
               alignment: Alignment.topLeft,
-              child: Text(
-                'Create folder',
-                textAlign: TextAlign.left,
-              ),
+              child: Text('Create folder', textAlign: TextAlign.left),
             ),
             Form(
               key: const ValueKey('create-folder-form'),
@@ -56,11 +50,16 @@ class CreateFolderDialog extends ConsumerWidget {
   }
 
   Future<void> _createFolder(
-      CreateFolderNotifer notifier, BuildContext context) async {
+    CreateFolderNotifer notifier,
+    BuildContext context,
+  ) async {
     final shouldClose = await notifier.crateFolder(currentPath);
     if (shouldClose) {
       //TODO: change this widget to stateful one
-      Navigator.pop(context, true);
+      if (context.mounted) {
+        // ignore: use_build_context_synchronously
+        Navigator.pop(context, true);
+      }
     }
   }
 }

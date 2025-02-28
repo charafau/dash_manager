@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:dash_manager/models/file_system_entity.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -8,10 +6,7 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 class DeleteDialog extends StatefulWidget {
   final List<FileSystemItem> itemsToDelete;
 
-  const DeleteDialog({
-    super.key,
-    required this.itemsToDelete,
-  });
+  const DeleteDialog({super.key, required this.itemsToDelete});
 
   @override
   State<DeleteDialog> createState() => _DeleteDialogState();
@@ -31,10 +26,16 @@ class _DeleteDialogState extends State<DeleteDialog> {
     for (var item in widget.itemsToDelete) {
       await item.fileSystemEntity?.delete();
       percentage = clampDouble(
-          (itemCount * 100) / widget.itemsToDelete.length, 0.0, 1.0);
+        (itemCount * 100) / widget.itemsToDelete.length,
+        0.0,
+        1.0,
+      );
     }
 
-    Navigator.of(context).pop();
+    if (context.mounted) {
+      // ignore: use_build_context_synchronously
+      Navigator.of(context).pop();
+    }
   }
 
   @override

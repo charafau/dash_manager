@@ -3,9 +3,7 @@ import 'package:dash_manager/widgets/file_column.dart';
 import 'package:flutter/material.dart';
 
 class MiddleColumns extends StatefulWidget {
-  const MiddleColumns({
-    Key? key,
-  }) : super(key: key);
+  const MiddleColumns({super.key});
 
   @override
   State<MiddleColumns> createState() => _MiddleColumnsState();

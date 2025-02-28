@@ -51,7 +51,10 @@ class _CopyDialogState extends State<CopyDialog> {
       onDone: () {
         outputStream.flush();
 
-        Navigator.of(context).pop();
+        if (context.mounted) {
+          // ignore: use_build_context_synchronously
+          Navigator.of(context).pop();
+        }
       },
     );
   }

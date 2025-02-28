@@ -18,18 +18,20 @@ class FileColumn extends ConsumerWidget {
   final FocusNode panelFocusNode;
 
   const FileColumn({
-    Key? key,
+    super.key,
     // required this.color,
     required this.columnSide,
     required this.opposidePanelFocusNode,
     required this.panelFocusNode,
-  }) : super(key: key);
+  });
   final double itemHeight = 28;
 
   Future scrollToCurrentItem(CommanderNotifierState state, int index) async {
-    await Scrollable.ensureVisible(state.getItemContext(index),
-        alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
-        alignment: 0.5);
+    await Scrollable.ensureVisible(
+      state.getItemContext(index),
+      alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
+      alignment: 0.5,
+    );
   }
 
   @override
@@ -45,61 +47,60 @@ class FileColumn extends ConsumerWidget {
       commanderNotifier = ref.watch(rightCommanderNotifierProvider.notifier);
       state = ref.watch(rightCommanderNotifierProvider);
     }
-    final sidePanelFocusNotifier =
-        ref.watch(sidePanelFocusNotifierProvider.notifier);
+    final sidePanelFocusNotifier = ref.watch(
+      sidePanelFocusNotifierProvider.notifier,
+    );
 
     return Flexible(
       child: Focus(
-        onKey: (focusNode, keyboard) {
+        onKeyEvent: (FocusNode node, KeyEvent event) {
           if (side == columnSide) {
             // focusNode.requestFocus();
             panelFocusNode.requestFocus();
-            if (keyboard is RawKeyDownEvent) {
-              if (keyboard.data.logicalKey == LogicalKeyboardKey.arrowDown) {
+            if (event is KeyDownEvent) {
+              if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
                 commanderNotifier.goToNextItem();
-              } else if (keyboard.data.logicalKey ==
-                  LogicalKeyboardKey.arrowUp) {
+              } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
                 commanderNotifier.goToPreviousItem();
-              } else if (keyboard.data.logicalKey == LogicalKeyboardKey.home) {
+              } else if (event.logicalKey == LogicalKeyboardKey.home) {
                 commanderNotifier.goToFirstItem();
-              } else if (keyboard.data.logicalKey == LogicalKeyboardKey.end) {
+              } else if (event.logicalKey == LogicalKeyboardKey.end) {
                 commanderNotifier.goToLastItem();
-              } else if (keyboard.data.logicalKey == LogicalKeyboardKey.tab) {
+              } else if (event.logicalKey == LogicalKeyboardKey.tab) {
                 sidePanelFocusNotifier.changeSide();
                 opposidePanelFocusNode.requestFocus();
-              } else if (keyboard.data.logicalKey == LogicalKeyboardKey.enter) {
+              } else if (event.logicalKey == LogicalKeyboardKey.enter) {
                 commanderNotifier.openCurrentItem();
-              } else if (keyboard.data.logicalKey == LogicalKeyboardKey.f5) {
+              } else if (event.logicalKey == LogicalKeyboardKey.f5) {
                 // copy
                 final fileSystemItem = state.currentFileSystemItem;
                 if (fileSystemItem != null) {
-                  copyFile(
-                    context,
-                    fileSystemItem,
-                    ref,
-                  ).then((value) {
+                  copyFile(context, fileSystemItem, ref).then((value) {
                     if (value) {
                       _reloadOpposidePanel(ref, side);
                     }
                   });
                 }
-              } else if (keyboard.data.logicalKey == LogicalKeyboardKey.f7) {
-                showCreateFolderDialog(context, state.currentPath)
-                    .then((value) {
+              } else if (event.logicalKey == LogicalKeyboardKey.f7) {
+                showCreateFolderDialog(context, state.currentPath).then((
+                  value,
+                ) {
                   if (value) {
                     commanderNotifier.reloadCurrentFolder();
                   }
                 });
-              } else if (keyboard.data.logicalKey == LogicalKeyboardKey.f8) {
+              } else if (event.logicalKey == LogicalKeyboardKey.f8) {
                 if (state.currentFileSystemItem != null) {
-                  showDeleteDialog(context, [state.currentFileSystemItem!.name])
-                      .then((value) {
+                  showDeleteDialog(context, [
+                    state.currentFileSystemItem!.name,
+                  ]).then((value) {
                     if (value) {
                       showDialog(
                         context: context,
-                        builder: (context) => DeleteDialog(
-                          itemsToDelete: [state.currentFileSystemItem!],
-                        ),
+                        builder:
+                            (context) => DeleteDialog(
+                              itemsToDelete: [state.currentFileSystemItem!],
+                            ),
                       ).then((value) {
                         commanderNotifier.reloadCurrentFolder();
                       });
@@ -122,47 +123,55 @@ class FileColumn extends ConsumerWidget {
           height: double.maxFinite,
           child: SingleChildScrollView(
             child: Column(
-              children: state.pathItems
-                  .asMap()
-                  .entries
-                  .map(
-                    (item) => InkWell(
-                      key: state.pathItemsKeys[item.key],
-                      onTap: () {
-                        commanderNotifier.setCurrentlySelectedIndex(item.key);
-                        panelFocusNode.requestFocus();
-                        sidePanelFocusNotifier.changeSide(side: columnSide);
-                      },
-                      onDoubleTap: () => commanderNotifier.openCurrentItem(),
-                      child: Container(
-                        height: 28,
-                        color: state.currentlySelectedItemIndex == item.key
-                            ? MacosColors.controlAccentColor
-                            : null,
-                        child: Row(
-                          children: [
-                            Icon(
-                                item.value.entityType == FileSystemItemType.file
-                                    ? Icons.file_copy
-                                    : Icons.folder),
-                            Flexible(
-                              child: Text(
-                                item.value.name,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: state.currentlySelectedItemIndex ==
-                                          item.key
-                                      ? Colors.white
-                                      : Colors.black,
+              children:
+                  state.pathItems
+                      .asMap()
+                      .entries
+                      .map(
+                        (item) => InkWell(
+                          key: state.pathItemsKeys[item.key],
+                          onTap: () {
+                            commanderNotifier.setCurrentlySelectedIndex(
+                              item.key,
+                            );
+                            panelFocusNode.requestFocus();
+                            sidePanelFocusNotifier.changeSide(side: columnSide);
+                          },
+                          onDoubleTap:
+                              () => commanderNotifier.openCurrentItem(),
+                          child: Container(
+                            height: 28,
+                            color:
+                                state.currentlySelectedItemIndex == item.key
+                                    ? MacosColors.controlAccentColor
+                                    : null,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  item.value.entityType ==
+                                          FileSystemItemType.file
+                                      ? Icons.file_copy
+                                      : Icons.folder,
                                 ),
-                              ),
+                                Flexible(
+                                  child: Text(
+                                    item.value.name,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color:
+                                          state.currentlySelectedItemIndex ==
+                                                  item.key
+                                              ? Colors.white
+                                              : Colors.black,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ),
-                  )
-                  .toList(),
+                      )
+                      .toList(),
             ),
           ),
         ),
@@ -172,15 +181,16 @@ class FileColumn extends ConsumerWidget {
 
   void _reloadOpposidePanel(WidgetRef ref, SidePanelFocus side) {
     _getNotifier(
-            ref,
-            side == SidePanelFocus.left
-                ? SidePanelFocus.right
-                : SidePanelFocus.left)
-        .reloadCurrentFolder();
+      ref,
+      side == SidePanelFocus.left ? SidePanelFocus.right : SidePanelFocus.left,
+    ).reloadCurrentFolder();
   }
 
-  Future<bool> copyFile(BuildContext context, FileSystemItem fileSystemItem,
-      WidgetRef ref) async {
+  Future<bool> copyFile(
+    BuildContext context,
+    FileSystemItem fileSystemItem,
+    WidgetRef ref,
+  ) async {
     late CommanderNotifierState opposideState;
 
     if (columnSide == SidePanelFocus.right) {
@@ -202,10 +212,11 @@ class FileColumn extends ConsumerWidget {
     if (shouldCopy != null && shouldCopy) {
       await showDialog(
         context: context,
-        builder: (context) => CopyDialog(
-          copyDestination: opposideState.currentPath,
-          copyItem: fileSystemItem,
-        ),
+        builder:
+            (context) => CopyDialog(
+              copyDestination: opposideState.currentPath,
+              copyItem: fileSystemItem,
+            ),
       );
 
       return true;
@@ -215,22 +226,22 @@ class FileColumn extends ConsumerWidget {
   }
 
   Future<bool> showCreateFolderDialog(
-      BuildContext context, String currentPath) async {
+    BuildContext context,
+    String currentPath,
+  ) async {
     return await showDialog(
       context: context,
-      builder: (context) => CreateFolderDialog(
-        currentPath: currentPath,
-      ),
+      builder: (context) => CreateFolderDialog(currentPath: currentPath),
     );
   }
 
   Future<bool> showDeleteDialog(
-      BuildContext context, List<String> items) async {
+    BuildContext context,
+    List<String> items,
+  ) async {
     return await showDialog(
       context: context,
-      builder: (context) => DeleteConfirmDialog(
-        deleteItems: items,
-      ),
+      builder: (context) => DeleteConfirmDialog(deleteItems: items),
     );
   }
 
@@ -251,7 +262,10 @@ enum FileColumnSide { left, right }
 class MyBehavior extends ScrollBehavior {
   @override
   Widget buildOverscrollIndicator(
-      BuildContext context, Widget child, ScrollableDetails details) {
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) {
     return child;
   }
 }
